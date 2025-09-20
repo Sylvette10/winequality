@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 # Configure page
 st.set_page_config(
     page_title="Wine Quality Assessment",
-    page_icon="🍷",
+    page_icon="🥂",
     layout="wide",
     initial_sidebar_state="collapsed"  # Hide sidebar by default
 )
@@ -418,7 +418,7 @@ def main():
         ### Understanding Results
         
         **Quality Categories:**
-        - 🏆 **Premium Quality**: Rating ≥ 7 - Suitable for premium wine collections
+        - ⭐⭐**Premium Quality**: Rating ≥ 7 - Suitable for premium wine collections
         - ⭐ **Standard Quality**: Rating < 7 - Good for regular wine offerings
         
         **Confidence Levels:**
@@ -456,7 +456,7 @@ def main():
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #666; padding: 1rem;">
-        <p>🍷 Professional Wine Quality Assessment System</p>
+        <p>🥂 Professional Wine Quality Assessment System 🥂</p>
         <p><small>Powered by Machine Learning • Built for Boutique Wineries</small></p>
     </div>
     """, unsafe_allow_html=True)
