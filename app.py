@@ -4,54 +4,166 @@ import numpy as np
 import joblib
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 # Configure page
 st.set_page_config(
-    page_title="Wine Quality Predictor",
+    page_title="Wine Quality Assessment",
     page_icon="🍷",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"  # Hide sidebar by default
 )
 
-# Custom CSS
+# Custom CSS for professional design
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 3rem;
-        color: #722F37;
-        text-align: center;
-        margin-bottom: 2rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    /* Hide Streamlit elements */
+    .stDeployButton {display: none;}
+    #MainMenu {visibility: hidden;}
+    .stAppDeployButton {display: none;}
+    header[data-testid="stHeader"] {display: none;}
+    
+    /* Custom styling */
+    .main-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
     }
     
-    .prediction-box {
+    .header-section {
+        text-align: center;
+        margin-bottom: 3rem;
         padding: 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        color: white;
+    }
+    
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .header-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-container {
+        display: flex;
+        justify-content: space-around;
+        margin: 2rem 0;
+        gap: 1rem;
+    }
+    
+    .stat-box {
+        background: white;
+        padding: 1.5rem;
         border-radius: 10px;
         text-align: center;
-        margin: 1rem 0;
-        border: 2px solid;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        flex: 1;
     }
     
-    .good-quality {
-        background-color: #d4edda;
-        border-color: #28a745;
-        color: #155724;
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
     }
     
-    .bad-quality {
-        background-color: #f8d7da;
-        border-color: #dc3545;
-        color: #721c24;
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
     }
     
-    .stSelectbox > div > div > select {
+    .input-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .result-box {
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        margin: 2rem 0;
+        border: 3px solid;
+    }
+    
+    .result-good {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #667eea;
+        color: white;
+    }
+    
+    .result-standard {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border-color: #f5576c;
+        color: white;
+    }
+    
+    .result-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .confidence-text {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Input styling */
+    .stNumberInput > div > div > input {
         background-color: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 0.5rem;
     }
     
-    .confidence-high { color: #28a745; font-weight: bold; }
-    .confidence-medium { color: #ffc107; font-weight: bold; }
-    .confidence-low { color: #dc3545; font-weight: bold; }
+    .stNumberInput > div > div > input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        color: #667eea;
+        font-weight: bold;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -66,27 +178,14 @@ def load_model_artifacts():
         return model, scaler, feature_names, model_info
     except FileNotFoundError as e:
         st.error(f"❌ Model files not found: {e}")
-        st.error("Please ensure all .pkl files are in the repository!")
-        st.stop()
-    except Exception as e:
-        st.error(f"❌ Error loading model: {e}")
         st.stop()
 
 def predict_wine_quality(features_dict, model, scaler, feature_names, model_name):
     """Make prediction using the trained model"""
     try:
-        # Create DataFrame from input
         input_data = pd.DataFrame([features_dict])
-        
-        # Ensure correct column order
         input_data = input_data.reindex(columns=feature_names, fill_value=0)
         
-        # Handle missing columns by filling with 0 or median values
-        for col in feature_names:
-            if col not in input_data.columns:
-                input_data[col] = 0
-        
-        # Make prediction based on model type
         if model_name in ['Logistic Regression', 'SVM']:
             input_scaled = scaler.transform(input_data)
             prediction = model.predict(input_scaled)[0]
@@ -96,334 +195,271 @@ def predict_wine_quality(features_dict, model, scaler, feature_names, model_name
             confidence = model.predict_proba(input_data)[0][1]
         
         return prediction, confidence
-        
     except Exception as e:
         st.error(f"Error making prediction: {e}")
         return 0, 0.5
 
-def create_radar_chart(features_dict, feature_names):
-    """Create a radar chart for wine characteristics"""
-    # Define reasonable ranges for normalization
-    feature_ranges = {
-        'fixed acidity': (4, 16),
-        'volatile acidity': (0, 2),
-        'citric acid': (0, 1),
-        'residual sugar': (0, 15),
-        'chlorides': (0, 0.5),
-        'free sulfur dioxide': (0, 80),
-        'total sulfur dioxide': (0, 300),
-        'density': (0.99, 1.01),
-        'pH': (2.5, 4.5),
-        'sulphates': (0, 2),
-        'alcohol': (8, 15)
-    }
-    
-    values = []
-    labels = []
-    
-    for feature in feature_names:
-        if feature in features_dict:
-            # Get range for normalization
-            min_val, max_val = feature_ranges.get(feature, (0, 1))
-            # Normalize value
-            normalized_value = (features_dict[feature] - min_val) / (max_val - min_val)
-            normalized_value = max(0, min(1, normalized_value))  # Clamp to [0, 1]
-            values.append(normalized_value)
-            labels.append(feature.replace('_', ' ').title())
-    
-    # Create radar chart
-    fig = go.Figure()
-    
-    fig.add_trace(go.Scatterpolar(
-        r=values + [values[0]] if values else [0],
-        theta=labels + [labels[0]] if labels else [''],
-        fill='toself',
-        name='Wine Profile',
-        line_color='#722F37',
-        fillcolor='rgba(114, 47, 55, 0.3)'
+def create_gauge_chart(confidence, is_good):
+    """Create a modern gauge chart"""
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number+delta",
+        value = confidence * 100,
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': "Confidence Level"},
+        delta = {'reference': 50},
+        gauge = {
+            'axis': {'range': [None, 100]},
+            'bar': {'color': "#667eea" if is_good else "#f5576c"},
+            'steps': [
+                {'range': [0, 50], 'color': "lightgray"},
+                {'range': [50, 80], 'color': "#ffd700"},
+                {'range': [80, 100], 'color': "#90EE90"}
+            ],
+            'threshold': {
+                'line': {'color': "red", 'width': 4},
+                'thickness': 0.75,
+                'value': 70
+            }
+        }
     ))
     
     fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 1]
-            )),
-        showlegend=False,
-        title="Wine Chemical Profile",
-        font_size=12,
-        height=400
+        height=300,
+        font={'color': "darkblue", 'family': "Arial"},
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)"
     )
     
     return fig
-
-def get_feature_input_widgets(feature_names):
-    """Create input widgets for all features"""
-    features_dict = {}
-    
-    # Default values for common wine features
-    default_values = {
-        'fixed acidity': 7.4,
-        'volatile acidity': 0.7,
-        'citric acid': 0.0,
-        'residual sugar': 1.9,
-        'chlorides': 0.076,
-        'free sulfur dioxide': 11.0,
-        'total sulfur dioxide': 34.0,
-        'density': 0.9978,
-        'pH': 3.51,
-        'sulphates': 0.56,
-        'alcohol': 9.4
-    }
-    
-    # Create columns for better layout
-    cols = st.columns(3)
-    
-    for i, feature in enumerate(feature_names):
-        col_idx = i % 3
-        with cols[col_idx]:
-            # Get default value
-            default_val = default_values.get(feature, 1.0)
-            
-            # Create appropriate input widget based on feature
-            if 'density' in feature.lower():
-                features_dict[feature] = st.number_input(
-                    f"{feature.replace('_', ' ').title()}",
-                    min_value=0.98,
-                    max_value=1.05,
-                    value=float(default_val),
-                    step=0.0001,
-                    format="%.4f",
-                    key=feature
-                )
-            elif 'ph' in feature.lower():
-                features_dict[feature] = st.number_input(
-                    f"{feature.replace('_', ' ').title()}",
-                    min_value=0.0,
-                    max_value=14.0,
-                    value=float(default_val),
-                    step=0.01,
-                    key=feature
-                )
-            else:
-                features_dict[feature] = st.number_input(
-                    f"{feature.replace('_', ' ').title()}",
-                    min_value=0.0,
-                    value=float(default_val),
-                    step=0.01,
-                    key=feature
-                )
-    
-    return features_dict
 
 def main():
     # Load model artifacts
     model, scaler, feature_names, model_info = load_model_artifacts()
     
-    # Header
-    st.markdown('<h1 class="main-header">🍷 Wine Quality Predictor</h1>', 
-                unsafe_allow_html=True)
-    
+    # Header Section
     st.markdown("""
-    <div style="text-align: center; margin-bottom: 2rem; color: #666;">
-        <h3>AI-Powered Quality Assessment for Boutique Wines</h3>
-        <p>Enter the chemical properties of your wine sample to predict its quality rating.</p>
+    <div class="header-section">
+        <div class="header-title">🍷 Wine Quality Assessment System</div>
+        <div class="header-subtitle">Professional Wine Quality Prediction for Boutique Wineries</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Sidebar with model information
-    with st.sidebar:
-        st.header("📊 Model Information")
-        st.write(f"**Model Type:** {model_info.get('model_name', 'Unknown')}")
-        st.write(f"**Accuracy:** {model_info.get('accuracy', 0):.3f}")
-        st.write(f"**Features:** {model_info.get('feature_count', len(feature_names))}")
-        st.write(f"**Quality Threshold:** {model_info.get('quality_threshold', 7)}")
-        
-        st.markdown("---")
-        st.header("🎯 Quality Standards")
-        st.success("**Premium Quality:** Rating ≥ 7")
-        st.warning("**Standard Quality:** Rating < 7")
-        
-        st.markdown("---")
-        st.header("💡 Tips")
-        st.info("Higher alcohol content and lower volatile acidity typically indicate better quality wines.")
-
-    # Main content
-    tab1, tab2, tab3 = st.tabs(["🔮 Prediction", "📊 Analysis", "ℹ️ About"])
+    # Model Performance Stats
+    st.markdown(f"""
+    <div class="stats-container">
+        <div class="stat-box">
+            <div class="stat-number">{model_info.get('accuracy', 0):.1%}</div>
+            <div class="stat-label">Model Accuracy</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{len(feature_names)}</div>
+            <div class="stat-label">Chemical Parameters</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{model_info.get('model_name', 'ML')}</div>
+            <div class="stat-label">Algorithm Used</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{model_info.get('quality_threshold', 7)}</div>
+            <div class="stat-label">Quality Threshold</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Main Content Tabs
+    tab1, tab2, tab3 = st.tabs(["🔬 Wine Analysis", "📊 Model Performance", "📖 User Guide"])
     
     with tab1:
-        st.subheader("🧪 Wine Chemical Properties")
+        st.markdown('<div class="input-section">', unsafe_allow_html=True)
+        st.subheader("Chemical Analysis Input")
+        st.write("Enter the laboratory test results for your wine sample:")
         
-        # Feature input form
-        with st.form("wine_features"):
-            st.write("Enter the chemical analysis results for your wine sample:")
+        # Create input form
+        with st.form("wine_analysis"):
+            # Organize inputs in a clean grid
+            col1, col2, col3 = st.columns(3)
             
-            # Get feature inputs
-            features_dict = get_feature_input_widgets(feature_names)
+            features_dict = {}
             
-            # Predict button
-            predict_button = st.form_submit_button(
-                "🔮 Predict Wine Quality",
-                use_container_width=True,
-                type="primary"
-            )
+            # Default values
+            defaults = {
+                'fixed acidity': 7.4, 'volatile acidity': 0.7, 'citric acid': 0.0,
+                'residual sugar': 1.9, 'chlorides': 0.076, 'free sulfur dioxide': 11.0,
+                'total sulfur dioxide': 34.0, 'density': 0.9978, 'pH': 3.51,
+                'sulphates': 0.56, 'alcohol': 9.4
+            }
+            
+            # Create inputs
+            for i, feature in enumerate(feature_names):
+                col_idx = i % 3
+                default_val = defaults.get(feature, 1.0)
+                
+                if col_idx == 0:
+                    with col1:
+                        features_dict[feature] = st.number_input(
+                            f"{feature.replace('_', ' ').title()}",
+                            value=float(default_val),
+                            step=0.01 if 'density' not in feature else 0.0001,
+                            format="%.4f" if 'density' in feature else "%.2f"
+                        )
+                elif col_idx == 1:
+                    with col2:
+                        features_dict[feature] = st.number_input(
+                            f"{feature.replace('_', ' ').title()}",
+                            value=float(default_val),
+                            step=0.01 if 'density' not in feature else 0.0001,
+                            format="%.4f" if 'density' in feature else "%.2f"
+                        )
+                else:
+                    with col3:
+                        features_dict[feature] = st.number_input(
+                            f"{feature.replace('_', ' ').title()}",
+                            value=float(default_val),
+                            step=0.01 if 'density' not in feature else 0.0001,
+                            format="%.4f" if 'density' in feature else "%.2f"
+                        )
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Analyze button
+            col1, col2, col3 = st.columns([1,2,1])
+            with col2:
+                analyze_button = st.form_submit_button(
+                    "🔬 Analyze Wine Quality",
+                    use_container_width=True
+                )
         
-        if predict_button:
-            # Make prediction
+        # Results section
+        if analyze_button:
             prediction, confidence = predict_wine_quality(
-                features_dict, model, scaler, feature_names, model_info.get('model_name', 'Unknown')
+                features_dict, model, scaler, feature_names, 
+                model_info.get('model_name', 'Unknown')
             )
+            
+            is_good = prediction == 1
+            result_class = "result-good" if is_good else "result-standard"
+            quality_text = "Premium Quality" if is_good else "Standard Quality"
             
             # Display results
             col1, col2 = st.columns([2, 1])
             
             with col1:
-                # Prediction result
-                is_good = prediction == 1
-                quality_text = "Premium Quality" if is_good else "Standard Quality"
-                quality_class = "good-quality" if is_good else "bad-quality"
-                
                 st.markdown(f"""
-                <div class="prediction-box {quality_class}">
-                    <h2>🏆 {quality_text}</h2>
-                    <h3>Confidence: {confidence:.1%}</h3>
-                    <p>{'✅ Meets premium quality standards' if is_good else '⚠️ Does not meet premium quality standards'}</p>
+                <div class="result-box {result_class}">
+                    <div class="result-title">🏆 {quality_text}</div>
+                    <div class="confidence-text">Confidence: {confidence:.1%}</div>
+                    <p>{'✅ Recommended for premium wine collection' if is_good 
+                       else '⚠️ Suitable for standard wine offerings'}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Confidence interpretation
+                # Quality interpretation
                 if confidence > 0.8:
-                    conf_text = "Very High"
-                    conf_class = "confidence-high"
+                    st.success("🎯 **Very High Confidence** - Excellent prediction reliability")
                 elif confidence > 0.6:
-                    conf_text = "High"
-                    conf_class = "confidence-high"
-                elif confidence > 0.4:
-                    conf_text = "Medium"
-                    conf_class = "confidence-medium"
+                    st.info("👍 **Good Confidence** - Reliable prediction")
                 else:
-                    conf_text = "Low"
-                    conf_class = "confidence-low"
-                
-                st.markdown(f"""
-                **Confidence Level:** <span class="{conf_class}">{conf_text}</span>
-                
-                **Recommendation:** {
-                    'Excellent for premium collection' if confidence > 0.8 and is_good else
-                    'Good quality, suitable for premium line' if confidence > 0.6 and is_good else
-                    'Standard quality, good for regular offerings' if not is_good else
-                    'Borderline case, consider additional testing'
-                }
-                """, unsafe_allow_html=True)
+                    st.warning("⚠️ **Moderate Confidence** - Consider additional testing")
             
             with col2:
-                # Confidence gauge
-                fig_gauge = go.Figure(go.Indicator(
-                    mode="gauge+number",
-                    value=confidence * 100,
-                    domain={'x': [0, 1], 'y': [0, 1]},
-                    title={'text': "Confidence %"},
-                    gauge={
-                        'axis': {'range': [None, 100]},
-                        'bar': {'color': "#722F37"},
-                        'steps': [
-                            {'range': [0, 50], 'color': "lightgray"},
-                            {'range': [50, 75], 'color': "yellow"},
-                            {'range': [75, 100], 'color': "lightgreen"}
-                        ],
-                        'threshold': {
-                            'line': {'color': "red", 'width': 4},
-                            'thickness': 0.75,
-                            'value': 70
-                        }
-                    }
-                ))
-                fig_gauge.update_layout(height=300)
-                st.plotly_chart(fig_gauge, use_container_width=True)
-            
-            # Wine profile radar chart
-            st.subheader("📊 Wine Profile Analysis")
-            radar_fig = create_radar_chart(features_dict, feature_names)
-            st.plotly_chart(radar_fig, use_container_width=True)
+                gauge_fig = create_gauge_chart(confidence, is_good)
+                st.plotly_chart(gauge_fig, use_container_width=True)
     
     with tab2:
-        st.subheader("📈 Model Performance")
+        st.subheader("🎯 Model Performance Metrics")
         
-        col1, col2, col3 = st.columns(3)
+        # Performance metrics
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("Model Accuracy", f"{model_info.get('accuracy', 0):.1%}")
+            st.metric("Accuracy", f"{model_info.get('accuracy', 0):.1%}")
         with col2:
-            st.metric("Features Used", model_info.get('feature_count', len(feature_names)))
+            st.metric("Model Type", model_info.get('model_name', 'Unknown'))
         with col3:
-            st.metric("Quality Threshold", model_info.get('quality_threshold', 7))
+            st.metric("Features", len(feature_names))
+        with col4:
+            st.metric("Threshold", model_info.get('quality_threshold', 7))
         
-        st.subheader("🔬 Feature Importance")
+        st.markdown("---")
+        
+        # Feature importance (if available)
         if hasattr(model, 'feature_importances_'):
-            # Create feature importance chart
+            st.subheader("📊 Feature Importance Analysis")
+            
             importance_df = pd.DataFrame({
-                'Feature': feature_names,
+                'Feature': [f.replace('_', ' ').title() for f in feature_names],
                 'Importance': model.feature_importances_
             }).sort_values('Importance', ascending=True)
             
-            fig_importance = px.bar(
-                importance_df,
+            fig = px.bar(
+                importance_df.tail(10),
                 x='Importance',
                 y='Feature',
                 orientation='h',
-                title="Feature Importance for Wine Quality Prediction"
+                title="Top 10 Most Important Features",
+                color='Importance',
+                color_continuous_scale='viridis'
             )
-            fig_importance.update_layout(height=400)
-            st.plotly_chart(fig_importance, use_container_width=True)
+            fig.update_layout(height=500, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Feature importance not available for this model type.")
-        
-        st.subheader("📋 Feature Ranges")
-        feature_info = {
-            'Feature': feature_names,
-            'Description': [f"Chemical property: {name.replace('_', ' ')}" for name in feature_names]
-        }
-        st.dataframe(pd.DataFrame(feature_info), use_container_width=True)
+            st.info("Feature importance analysis not available for this model type.")
     
     with tab3:
-        st.subheader("🍷 About Wine Quality Prediction")
+        st.subheader("📚 User Guide")
         
         st.markdown("""
-        ### Project Overview
-        This application uses machine learning to predict wine quality based on chemical analysis.
-        Developed for boutique wineries to assist in quality assurance processes.
+        ### How to Use This System
         
-        ### How It Works
-        1. **Input:** Enter the results of chemical analysis for your wine sample
-        2. **Processing:** Our trained ML model analyzes the chemical profile
-        3. **Output:** Get a quality prediction with confidence score
+        1. **Collect Wine Sample** - Obtain a representative sample of the wine to be tested
+        2. **Laboratory Analysis** - Perform chemical analysis to get the required measurements
+        3. **Input Data** - Enter all 11 chemical parameters in the analysis form
+        4. **Get Results** - Click "Analyze Wine Quality" to receive prediction and confidence score
         
-        ### Features Analyzed
-        The model considers multiple chemical properties that influence wine quality:
-        - **Acidity levels** (fixed, volatile, citric acid, pH)
-        - **Sugar content** (residual sugar)
-        - **Preservatives** (sulfur dioxide, sulphates)
-        - **Physical properties** (density, alcohol content)
-        - **Mineral content** (chlorides)
+        ### Understanding Results
         
-        ### Model Performance
-        - Trained on comprehensive wine dataset
-        - Multiple algorithms tested and best performer selected
-        - Validated using industry-standard metrics
+        **Quality Categories:**
+        - 🏆 **Premium Quality**: Rating ≥ 7 - Suitable for premium wine collections
+        - ⭐ **Standard Quality**: Rating < 7 - Good for regular wine offerings
         
-        ### Usage Tips
-        - Ensure accurate chemical measurements
-        - Higher confidence scores indicate more reliable predictions
-        - Consider multiple samples for better assessment
-        - Use as a screening tool alongside expert evaluation
+        **Confidence Levels:**
+        - **80-100%**: Very reliable prediction
+        - **60-80%**: Good prediction reliability  
+        - **40-60%**: Moderate reliability, consider additional testing
+        - **Below 40%**: Low confidence, manual evaluation recommended
+        
+        ### Chemical Parameters Explained
+        
+        | Parameter | Description | Typical Range |
+        |-----------|-------------|---------------|
+        | Fixed Acidity | Non-volatile acids (tartaric, malic) | 4-16 g/L |
+        | Volatile Acidity | Acetic acid content | 0.1-1.6 g/L |
+        | Citric Acid | Adds freshness and flavor | 0-1 g/L |
+        | Residual Sugar | Sugar remaining after fermentation | 1-15 g/L |
+        | Chlorides | Salt content | 0.01-0.4 g/L |
+        | Free SO₂ | Available sulfur dioxide | 1-80 mg/L |
+        | Total SO₂ | Total sulfur dioxide content | 6-300 mg/L |
+        | Density | Wine density | 0.99-1.01 g/cm³ |
+        | pH | Acidity/alkalinity level | 2.7-4.0 |
+        | Sulphates | Wine additive (potassium sulphate) | 0.3-2 g/L |
+        | Alcohol | Ethanol percentage | 8-15% vol |
+        
+        ### Best Practices
+        
+        - Ensure accurate laboratory measurements
+        - Test multiple samples for consistency
+        - Use results as a screening tool alongside expert evaluation
+        - Consider seasonal and batch variations
+        - Keep records for quality tracking over time
         """)
-        
-        st.markdown("---")
-        st.markdown("""
-        <div style="text-align: center; color: #666;">
-            <p>🍷 Wine Quality Predictor | Built with Streamlit & Machine Learning</p>
-            <p><small>Developed for boutique winery quality assurance teams</small></p>
-        </div>
-        """, unsafe_allow_html=True)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #666; padding: 1rem;">
+        <p>🍷 Professional Wine Quality Assessment System</p>
+        <p><small>Powered by Machine Learning • Built for Boutique Wineries</small></p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
