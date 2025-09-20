@@ -22,18 +22,19 @@ st.markdown("""
     .stAppDeployButton {display: none;}
     header[data-testid="stHeader"] {display: none;}
     
-    /* Custom styling */
+    /* Main container */
     .main-container {
         padding: 2rem;
         max-width: 1200px;
         margin: 0 auto;
     }
     
+    /* Header Section */
     .header-section {
         text-align: center;
         margin-bottom: 3rem;
         padding: 2rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #8B0000 0%, #A52A2A 100%);
         border-radius: 15px;
         color: white;
     }
@@ -50,6 +51,7 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     
+    /* Stats section */
     .stats-container {
         display: flex;
         justify-content: space-around;
@@ -58,7 +60,7 @@ st.markdown("""
     }
     
     .stat-box {
-        background: white;
+        background: #FAF3E0; /* Soft beige */
         padding: 1.5rem;
         border-radius: 10px;
         text-align: center;
@@ -69,7 +71,7 @@ st.markdown("""
     .stat-number {
         font-size: 2rem;
         font-weight: bold;
-        color: #667eea;
+        color: #8B0000; /* Deep red */
     }
     
     .stat-label {
@@ -77,6 +79,7 @@ st.markdown("""
         font-size: 0.9rem;
     }
     
+    /* Input section */
     .input-section {
         background: white;
         padding: 2rem;
@@ -85,6 +88,7 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     
+    /* Results section */
     .result-box {
         padding: 2rem;
         border-radius: 15px;
@@ -94,14 +98,14 @@ st.markdown("""
     }
     
     .result-good {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-color: #667eea;
+        background: linear-gradient(135deg, #8B0000 0%, #A52A2A 100%);
+        border-color: #8B0000;
         color: white;
     }
     
     .result-standard {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        border-color: #f5576c;
+        background: linear-gradient(135deg, #E63946 0%, #A52A2A 100%);
+        border-color: #E63946;
         color: white;
     }
     
@@ -125,13 +129,13 @@ st.markdown("""
     }
     
     .stNumberInput > div > div > input:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        border-color: #8B0000;
+        box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.25);
     }
     
     /* Button styling */
     .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #8B0000 0%, #A52A2A 100%);
         color: white;
         border: none;
         border-radius: 25px;
@@ -143,10 +147,10 @@ st.markdown("""
     
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 15px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 8px 15px rgba(139, 0, 0, 0.4);
     }
     
-    /* Tab styling */
+    /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
     }
@@ -154,17 +158,18 @@ st.markdown("""
     .stTabs [data-baseweb="tab"] {
         height: 50px;
         white-space: pre-wrap;
-        background-color: #f8f9fa;
+        background-color: #FAF3E0;
         border-radius: 10px;
-        color: #667eea;
+        color: #8B0000;
         font-weight: bold;
     }
     
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #8B0000 0%, #A52A2A 100%);
         color: white;
     }
 </style>
+
 """, unsafe_allow_html=True)
 
 @st.cache_resource
