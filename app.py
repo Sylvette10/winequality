@@ -25,8 +25,8 @@ st.markdown("""
     /* Main container */
     .main-container {
         padding: 2rem;
-        max-width: 1200px;
-        margin: 800 auto;
+        max-width: 1000px;
+        margin: 500 auto;
     }
     
     /* Header Section */
