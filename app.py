@@ -239,7 +239,7 @@ def main():
     # Header Section
     st.markdown("""
     <div class="header-section">
-        <div class="header-title">🍷 Wine Quality Assessment System</div>
+        <div class="header-title">🥂 Wine Quality Assessment System 🥂</div>
         <div class="header-subtitle">Professional Wine Quality Prediction for Boutique Wineries</div>
     </div>
     """, unsafe_allow_html=True)
@@ -267,7 +267,7 @@ def main():
     """, unsafe_allow_html=True)
     
     # Main Content Tabs
-    tab1, tab2, tab3 = st.tabs(["🔬 Wine Analysis", "📊 Model Performance", "📖 User Guide"])
+    tab1, tab2, tab3 = st.tabs(["🔎 Wine Analysis", "📈 Model Performance", "📑 User Guide"])
     
     with tab1:
         st.markdown('<div class="input-section">', unsafe_allow_html=True)
@@ -325,7 +325,7 @@ def main():
             col1, col2, col3 = st.columns([1,2,1])
             with col2:
                 analyze_button = st.form_submit_button(
-                    "🔬 Analyze Wine Quality",
+                    "🔎 Analyze Wine Quality",
                     use_container_width=True
                 )
         
@@ -359,7 +359,7 @@ def main():
                 elif confidence > 0.6:
                     st.info("👍 **Good Confidence** - Reliable prediction")
                 else:
-                    st.warning("⚠️ **Moderate Confidence** - Consider additional testing")
+                    st.warning("🧐 **Moderate Confidence** - Consider additional testing")
             
             with col2:
                 gauge_fig = create_gauge_chart(confidence, is_good)
