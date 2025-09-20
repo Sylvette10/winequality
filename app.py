@@ -16,6 +16,11 @@ st.set_page_config(
 # Custom CSS for professional design
 st.markdown("""
 <style>
+.main {
+        max-width: 1000px;   /* Adjust this value (e.g., 800px, 900px, etc.) */
+        margin: 0 auto;
+        padding: 2rem;
+    }
     /* Hide Streamlit elements */
     .stDeployButton {display: none;}
     #MainMenu {visibility: hidden;}
